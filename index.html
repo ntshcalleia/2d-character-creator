@@ -24,12 +24,26 @@
 <body>
     <canvas id="canvas"></canvas>
     <div id="menu">
-        <input type="file" id="imageLoader" name="imageLoader" multiple/>
         <h3>Images:</h3>
+        <input type="file" id="imageLoader" name="imageLoader" multiple/>
+        <button id="exportButton">Log JSON</button>
         <ul id="imageList"></ul>
     </div>
 
     <script>
+        var exportButton = document.getElementById('exportButton');
+        exportButton.onclick = function() {
+            var json = JSON.stringify(images);
+            console.log(json);
+            // var blob = new Blob([json], {type: "application/json"});
+            // var url  = URL.createObjectURL(blob);
+
+            // var a = document.createElement('a');
+            // a.download = "images.json";
+            // a.href = url;
+            // a.click();
+        };
+
         var canvas = document.getElementById('canvas');
         var ctx = canvas.getContext('2d');
         var img = new Image();
