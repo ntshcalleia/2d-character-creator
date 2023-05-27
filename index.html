@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #menu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ffffff;
+            border: 1px solid #000000;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="menu">
+        <input type="file" id="imageLoader" name="imageLoader" multiple/>
+        <h3>Images:</h3>
+        <ul id="imageList"></ul>
+    </div>
+
+    <script>
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var img = new Image();
+        var images = [];
+        var activeImageIndex = -1;
+        var offsetX, offsetY;  // offsets for dragging
+
+        // resize canvas to full window size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function handleImage(e) {
+            for (var i = 0; i < e.target.files.length; i++) {
+                (function(file) {
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                        var img = new Image();
+                        img.onload = function() {
+                            var imageObject = {
+                                img: img,
+                                x: 0,
+                                y: 0,
+                                name: file.name,
+                            };
+                            images.push(imageObject);
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            images.forEach(function(imageObject) {
+                                ctx.drawImage(imageObject.img, imageObject.x, imageObject.y);
+                            });
+                            updateImageList();
+                        }
+                        img.src = event.target.result;
+                    }
+                    reader.readAsDataURL(file); 
+                })(e.target.files[i]);
+            }
+        }
+
+        var imageLoader = document.getElementById('imageLoader');
+        imageLoader.addEventListener('change', handleImage, false);
+
+        function handleMouseDown(e) {
+            var rect = canvas.getBoundingClientRect();
+            var x = e.clientX - rect.left;
+            var y = e.clientY - rect.top;
+            
+            for (var i = images.length - 1; i >= 0; i--) {
+                var imageObject = images[i];
+                if (x > imageObject.x && x < imageObject.x + imageObject.img.width &&
+                    y > imageObject.y && y < imageObject.y + imageObject.img.height) {
+                    activeImageIndex = i;
+                    offsetX = x - imageObject.x;
+                    offsetY = y - imageObject.y;
+                    break;
+                }
+            }
+        }
+
+        function handleMouseUp(e) {
+            activeImageIndex = -1;
+        }
+
+        function handleMouseMove(e) {
+            if (activeImageIndex >= 0) {
+                var rect = canvas.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+                var imageObject = images[activeImageIndex];
+                imageObject.x = x - offsetX;
+                imageObject.y = y - offsetY;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                images.forEach(function(imageObject) {
+                    ctx.drawImage(imageObject.img, imageObject.x, imageObject.y);
+                });
+            }
+        }
+
+        canvas.addEventListener('mousedown', handleMouseDown, false);
+        canvas.addEventListener('mouseup', handleMouseUp, false);
+        canvas.addEventListener('mousemove', handleMouseMove, false);
+
+        // updates the image list displayed on the side
+        function updateImageList() {
+            var imageList = document.getElementById('imageList');
+            imageList.innerHTML = '';
+            images.slice().reverse().forEach(function(imageObject, index) {
+                var listItem = document.createElement('li');
+                listItem.innerText = imageObject.name;
+                var upButton = document.createElement('button');
+                upButton.innerText = 'Move Down';
+                upButton.onclick = function() {
+                    var actualIndex = images.length - 1 - index;
+                    if (actualIndex > 0) {
+                        var temp = images[actualIndex];
+                        images[actualIndex] = images[actualIndex - 1];
+                        images[actualIndex - 1] = temp;
+                        updateImageList();
+                        drawImages();
+                    }
+                };
+                var downButton = document.createElement('button');
+                downButton.innerText = 'Move Up';
+                downButton.onclick = function() {
+                    var actualIndex = images.length - 1 - index;
+                    if (actualIndex < images.length - 1) {
+                        var temp = images[actualIndex];
+                        images[actualIndex] = images[actualIndex + 1];
+                        images[actualIndex + 1] = temp;
+                        updateImageList();
+                        drawImages();
+                    }
+                };
+                listItem.appendChild(upButton);
+                listItem.appendChild(downButton);
+                imageList.appendChild(listItem);
+            });
+        }
+
+        // draws all images on the canvas
+        function drawImages() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            images.forEach(function(imageObject) {
+                ctx.drawImage(imageObject.img, imageObject.x, imageObject.y);
+            });
+        }
+    </script>
+</body>
+</html>
