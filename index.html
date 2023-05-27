@@ -67,6 +67,7 @@
                                 x: 0,
                                 y: 0,
                                 name: file.name,
+                                userDefinedName: "Image " + (images.length + 1), // default name
                             };
                             images.push(imageObject);
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -132,7 +133,14 @@
             imageList.innerHTML = '';
             images.slice().reverse().forEach(function(imageObject, index) {
                 var listItem = document.createElement('li');
+                var nameInput = document.createElement('input');
+                nameInput.value = imageObject.userDefinedName;
+                nameInput.onchange = function() {
+                    var actualIndex = images.length - 1 - index;
+                    images[actualIndex].userDefinedName = this.value;
+                };
                 listItem.innerText = imageObject.name;
+                listItem.appendChild(nameInput);
                 var upButton = document.createElement('button');
                 upButton.innerText = 'Move Down';
                 upButton.onclick = function() {
